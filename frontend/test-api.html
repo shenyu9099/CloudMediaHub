@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 测试页面 - CloudMediaHub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .response-box {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+        
+        .response-box.show {
+            display: block;
+        }
+        
+        .response-box h3 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        
+        .response-box pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .success {
+            border-left-color: #4caf50;
+        }
+        
+        .error {
+            border-left-color: #f44336;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .info-box p {
+            color: #1976d2;
+            margin: 0.5rem 0;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-left: 1rem;
+        }
+        
+        .status.pending {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status.failed {
+            background: #ffebee;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 CloudMediaHub API 测试</h1>
+        
+        <!-- 注册测试 -->
+        <div class="test-section">
+            <h2>1️⃣ 用户注册测试 <span class="status pending" id="registerStatus">未测试</span></h2>
+            
+            <div class="info-box">
+                <p><strong>接口地址：</strong> https://prod-61.japaneast.logic.azure.com/.../register</p>
+                <p><strong>请求方法：</strong> POST</p>
+                <p><strong>功能说明：</strong> 创建新用户账号</p>
+            </div>
+            
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="regUsername" value="测试用户" required>
+                </div>
+                <div class="form-group">
+                    <label>邮箱</label>
+                    <input type="email" id="regEmail" value="test@cloudmediahub.com" required>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="regPassword" value="123456" required>
+                </div>
+                <button type="submit">🚀 发送注册请求</button>
+            </form>
+            
+            <div class="response-box" id="registerResponse">
+                <h3>响应结果：</h3>
+                <pre id="registerResult"></pre>
+            </div>
+        </div>
+        
+        <!-- 登录测试 -->
+        <div class="test-section">
+            <h2>2️⃣ 用户登录测试 <span class="status pending" id="loginStatus">未测试</span></h2>
+            
+            <div class="info-box">
+                <p><strong>接口地址：</strong> https://prod-56.japaneast.logic.azure.com/.../login</p>
+                <p><strong>请求方法：</strong> POST</p>
+                <p><strong>功能说明：</strong> 验证用户凭据并返回用户信息</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>邮箱</label>
+                    <input type="email" id="loginEmail" value="test@cloudmediahub.com" required>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="loginPassword" value="123456" required>
+                </div>
+                <button type="submit">🚀 发送登录请求</button>
+            </form>
+            
+            <div class="response-box" id="loginResponse">
+                <h3>响应结果：</h3>
+                <pre id="loginResult"></pre>
+            </div>
+        </div>
+        
+        <!-- 快速测试按钮 -->
+        <div class="test-section">
+            <h2>⚡ 快速测试</h2>
+            <p style="color: #666; margin-bottom: 1rem;">点击按钮依次测试注册和登录流程</p>
+            <button onclick="autoTest()" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                🎯 自动测试（注册 → 登录）
+            </button>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // 注册测试
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            
+            const statusEl = document.getElementById('registerStatus');
+            const responseBox = document.getElementById('registerResponse');
+            const resultEl = document.getElementById('registerResult');
+            
+            statusEl.textContent = '请求中...';
+            statusEl.className = 'status pending';
+            
+            try {
+                const response = await fetch(API_CONFIG.REGISTER, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                responseBox.classList.add('show');
+                if (data.success) {
+                    responseBox.classList.add('success');
+                    responseBox.classList.remove('error');
+                    statusEl.textContent = '✅ 成功';
+                    statusEl.className = 'status success';
+                } else {
+                    responseBox.classList.add('error');
+                    responseBox.classList.remove('success');
+                    statusEl.textContent = '❌ 失败';
+                    statusEl.className = 'status failed';
+                }
+                
+                resultEl.textContent = JSON.stringify(data, null, 2);
+                
+            } catch (error) {
+                responseBox.classList.add('show', 'error');
+                responseBox.classList.remove('success');
+                statusEl.textContent = '❌ 错误';
+                statusEl.className = 'status failed';
+                resultEl.textContent = `错误: ${error.message}`;
+            }
+        });
+        
+        // 登录测试
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const statusEl = document.getElementById('loginStatus');
+            const responseBox = document.getElementById('loginResponse');
+            const resultEl = document.getElementById('loginResult');
+            
+            statusEl.textContent = '请求中...';
+            statusEl.className = 'status pending';
+            
+            try {
+                const response = await fetch(API_CONFIG.LOGIN, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                responseBox.classList.add('show');
+                if (data.success) {
+                    responseBox.classList.add('success');
+                    responseBox.classList.remove('error');
+                    statusEl.textContent = '✅ 成功';
+                    statusEl.className = 'status success';
+                } else {
+                    responseBox.classList.add('error');
+                    responseBox.classList.remove('success');
+                    statusEl.textContent = '❌ 失败';
+                    statusEl.className = 'status failed';
+                }
+                
+                resultEl.textContent = JSON.stringify(data, null, 2);
+                
+            } catch (error) {
+                responseBox.classList.add('show', 'error');
+                responseBox.classList.remove('success');
+                statusEl.textContent = '❌ 错误';
+                statusEl.className = 'status failed';
+                resultEl.textContent = `错误: ${error.message}`;
+            }
+        });
+        
+        // 自动测试
+        async function autoTest() {
+            alert('开始自动测试流程：\n1. 先注册新用户\n2. 等待3秒\n3. 使用相同账号登录');
+            
+            // 提交注册表单
+            document.getElementById('registerForm').dispatchEvent(new Event('submit'));
+            
+            // 等待3秒
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            // 提交登录表单
+            document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+        }
+        
+        // 页面加载完成提示
+        window.addEventListener('load', () => {
+            console.log('✅ API测试页面加载完成');
+            console.log('📡 注册接口:', API_CONFIG.REGISTER);
+            console.log('📡 登录接口:', API_CONFIG.LOGIN);
+        });
+    </script>
+</body>
+</html>
+

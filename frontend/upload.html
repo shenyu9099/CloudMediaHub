@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload - CloudMediaHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <h1 class="logo" onclick="window.location.href='index.html'">☁️ CloudMediaHub</h1>
+            </div>
+            <div class="nav-center">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="discover.html" class="nav-link">Discover</a>
+                <a href="upload.html" class="nav-link active">Upload</a>
+            </div>
+            <div class="nav-right">
+                <div id="userSection" style="display: none;">
+                    <div class="user-menu">
+                        <span class="user-avatar" id="userAvatar">U</span>
+                        <div class="user-dropdown">
+                            <span id="username">Username</span>
+                            <div class="dropdown-menu">
+                                <a href="likes.html">My Likes</a>
+                                <a href="#" onclick="logout()">Logout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="authSection">
+                    <button onclick="showLogin()" class="btn-outline">Login</button>
+                    <button onclick="showRegister()" class="btn-primary">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Upload Section -->
+    <section class="upload-section">
+        <div class="upload-container">
+            <h1 class="upload-title">Upload Your Content</h1>
+            <p class="upload-subtitle">Share images, videos, and audio files</p>
+
+            <form onsubmit="uploadMedia(event)" class="upload-form">
+                <!-- File Upload Area -->
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="fileInput" accept="image/*,video/*,audio/*" required onchange="handleFileSelect(event)" style="display: none;" />
+                    <div id="uploadPrompt" class="upload-prompt" onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-icon">📤</div>
+                        <p class="upload-text">Click or drag files here</p>
+                        <p class="upload-hint">Supports JPG, PNG, GIF, MP4, MP3 and more</p>
+                    </div>
+                    <div id="filePreview" class="file-preview" style="display: none;">
+                        <img id="previewImage" class="preview-image" style="display: none;" />
+                        <video id="previewVideo" class="preview-video" controls style="display: none;"></video>
+                        <audio id="previewAudio" class="preview-audio" controls style="display: none;"></audio>
+                        <p id="fileName" class="file-name"></p>
+                        <button type="button" onclick="clearFile(event)" class="btn-clear">✕ Choose Another</button>
+                    </div>
+                </div>
+
+                <!-- Form Fields -->
+                <div class="form-group">
+                    <label>Title *</label>
+                    <input type="text" id="uploadTitle" required placeholder="Give your content a title" />
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="uploadDesc" rows="4" placeholder="Describe your content (optional)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Tags</label>
+                    <input type="text" id="uploadTags" placeholder="Separate with commas, e.g.: travel, landscape, daily" />
+                    <p class="form-hint">Adding tags helps more people discover your content</p>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-upload" id="uploadBtn">
+                    <span>🚀 Start Upload</span>
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- My Likes Modal -->
+    <div id="myLikesModal" class="modal">
+        <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
+            <span class="close" onclick="closeModal('myLikesModal')">&times;</span>
+            <h2>❤️ My Likes</h2>
+            <div id="myLikesContent" class="content-grid" style="margin-top: 2rem;">
+                <!-- Dynamically loaded liked content -->
+            </div>
+            <div id="myLikesLoading" class="loading" style="display: none;">
+                Loading
+            </div>
+            <div id="myLikesEmpty" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">❤️</div>
+                <p class="empty-state-text">No likes yet</p>
+                <button onclick="closeModal('myLikesModal'); window.location.href='discover.html'" class="btn-primary" style="margin-top: 1rem;">Explore Content</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>Welcome Back</h2>
+            <form onsubmit="login(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required placeholder="Enter your email" />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required placeholder="Enter your password" />
+                </div>
+                <button type="submit" class="btn-primary btn-block">Login</button>
+            </form>
+            <p class="modal-footer">
+                Don't have an account? <a href="#" onclick="closeModal('loginModal'); showRegister();">Sign Up</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>Create Account</h2>
+            <form onsubmit="register(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="regUsername" required placeholder="Enter your username" />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" required placeholder="Enter your email" />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" required placeholder="Enter password (at least 6 characters)" minlength="6" />
+                </div>
+                <button type="submit" class="btn-primary btn-block">Sign Up</button>
+            </form>
+            <p class="modal-footer">
+                Already have an account? <a href="#" onclick="closeModal('registerModal'); showLogin();">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check login status
+            const savedUser = localStorage.getItem('currentUser');
+            if (!savedUser) {
+                // Not logged in, show login prompt
+                showToast('Please login first', 'warning');
+                setTimeout(() => {
+                    showLogin();
+                }, 1000);
+            } else {
+                currentUser = JSON.parse(savedUser);
+                updateUserUI();
+            }
+            
+            // Setup drag and drop
+            setupDragAndDrop();
+        });
+
+        // Clear file
+        function clearFile(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            document.getElementById('fileInput').value = '';
+            document.getElementById('filePreview').style.display = 'none';
+            document.getElementById('uploadPrompt').style.display = 'block';
+            document.getElementById('previewImage').src = '';
+            document.getElementById('previewImage').style.display = 'none';
+            document.getElementById('previewVideo').style.display = 'none';
+            document.getElementById('previewAudio').style.display = 'none';
+        }
+        
+        // Override handleFileSelect for this page
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            console.log('File selected:', file.name, file.type);
+            
+            const fileName = document.getElementById('fileName');
+            const filePreview = document.getElementById('filePreview');
+            const uploadPrompt = document.getElementById('uploadPrompt');
+            const previewImage = document.getElementById('previewImage');
+            const previewVideo = document.getElementById('previewVideo');
+            const previewAudio = document.getElementById('previewAudio');
+            
+            // Show file name and preview container
+            fileName.textContent = file.name;
+            filePreview.style.display = 'block';
+            uploadPrompt.style.display = 'none';
+            
+            // Hide all previews first
+            previewImage.style.display = 'none';
+            if (previewVideo) previewVideo.style.display = 'none';
+            if (previewAudio) previewAudio.style.display = 'none';
+            
+            // Show appropriate preview based on file type
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = 'block';
+                    console.log('Image preview loaded');
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type.startsWith('video/') && previewVideo) {
+                previewVideo.src = URL.createObjectURL(file);
+                previewVideo.style.display = 'block';
+                console.log('Video preview loaded');
+            } else if (file.type.startsWith('audio/') && previewAudio) {
+                previewAudio.src = URL.createObjectURL(file);
+                previewAudio.style.display = 'block';
+                console.log('Audio preview loaded');
+            }
+        }
+    </script>
+</body>
+</html>

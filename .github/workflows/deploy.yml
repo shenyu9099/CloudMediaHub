@@ -1,0 +1,37 @@
+name: Deploy Frontend to Azure Static Website
+
+on:
+  push:
+    branches:
+      - main
+      - master  # Support both branch names
+    paths:
+      - 'frontend/**'  # Only trigger when frontend files change
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Deploy frontend to Azure Blob Storage Static Website
+      - name: Deploy to Azure Static Website
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az storage blob upload-batch \
+              --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+              --destination '$web' \
+              --source ./frontend \
+              --overwrite
+
+      # Output deployment URL
+      - name: Deployment Complete
+        run: |
+          echo "✅ Deployment successful!"
+          echo "🌐 Website URL: https://cloudmediahubstorage.z11.web.core.windows.net/"
+

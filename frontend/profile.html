@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - CloudMediaHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <h1 class="logo" onclick="window.location.href='index.html'">☁️ CloudMediaHub</h1>
+            </div>
+            <div class="nav-center">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="discover.html" class="nav-link">Discover</a>
+                <a href="upload.html" class="nav-link">Upload</a>
+            </div>
+            <div class="nav-right">
+                <div id="userSection" style="display: none;">
+                    <div class="user-menu">
+                        <span class="user-avatar" id="userAvatar">U</span>
+                        <div class="user-dropdown">
+                            <span id="username">Username</span>
+                            <div class="dropdown-menu">
+                                <a href="likes.html">My Likes</a>
+                                <a href="#" onclick="logout()">Logout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="authSection">
+                    <button onclick="showLogin()" class="btn-outline">Login</button>
+                    <button onclick="showRegister()" class="btn-primary">Register</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 个人信息头部 -->
+    <section class="profile-header">
+        <div class="container">
+            <div class="profile-info">
+                <div class="profile-avatar-large" id="profileAvatarLarge">U</div>
+                <div class="profile-details">
+                    <h1 id="profileUsername">Username</h1>
+                    <p id="profileEmail">email@example.com</p>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <span class="stat-number" id="myContentsCount">0</span>
+                            <span class="stat-label">Contents</span>
+                        </div>
+                        <div class="profile-stat">
+                            <span class="stat-number" id="myLikesCount">0</span>
+                            <span class="stat-label">Likes</span>
+                        </div>
+                        <div class="profile-stat">
+                            <span class="stat-number" id="myViewsCount">0</span>
+                            <span class="stat-label">Views</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 标签页导航 -->
+    <section class="profile-tabs">
+        <div class="container">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('myContents')">📁 My Contents</button>
+                <button class="tab-btn" onclick="switchTab('myLikes')">❤️ My Likes</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 内容区域 -->
+    <section class="profile-content">
+        <div class="container">
+            <!-- 我的内容 -->
+            <div id="myContentsTab" class="tab-content active">
+                <div id="myContentsGrid" class="content-grid">
+                    <!-- 动态加载我的内容 -->
+                </div>
+                <div id="myContentsLoading" class="loading" style="display: none;">
+                    Loading...
+                </div>
+                <div id="myContentsEmpty" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">📁</div>
+                    <p class="empty-state-text">No content uploaded yet</p>
+                    <button onclick="window.location.href='upload.html'" class="btn-primary" style="margin-top: 1rem;">Upload Now</button>
+                </div>
+            </div>
+
+            <!-- 我的点赞 -->
+            <div id="myLikesTab" class="tab-content">
+                <div id="myLikesGrid" class="content-grid">
+                    <!-- 动态加载我的点赞 -->
+                </div>
+                <div id="myLikesLoading" class="loading" style="display: none;">
+                    Loading...
+                </div>
+                <div id="myLikesEmpty" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">❤️</div>
+                    <p class="empty-state-text">No liked content yet</p>
+                    <button onclick="window.location.href='discover.html'" class="btn-primary" style="margin-top: 1rem;">Discover Now</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 内容详情弹窗 -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content detail-modal">
+            <span class="close" onclick="closeModal('detailModal')">&times;</span>
+            <div id="detailContent">
+                <!-- 动态加载内容详情 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑内容弹窗 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editModal')">&times;</span>
+            <h2>Edit Content</h2>
+            <form onsubmit="submitEdit(event)">
+                <input type="hidden" id="editContentId" />
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="editTitle" required placeholder="Enter title" />
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="editDesc" rows="5" placeholder="Enter description (optional)"></textarea>
+                </div>
+                <button type="submit" class="btn-primary btn-block">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast" class="toast"></div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查登录状态
+            const savedUser = localStorage.getItem('currentUser');
+            if (!savedUser) {
+                // 未登录，跳转到首页
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = JSON.parse(savedUser);
+            updateUserUI();
+            loadProfileData();
+        });
+
+        // 加载个人资料数据
+        async function loadProfileData() {
+            // 更新个人信息
+            document.getElementById('profileUsername').textContent = currentUser.username || 'Username';
+            document.getElementById('profileEmail').textContent = currentUser.email || 'email@example.com';
+            document.getElementById('profileAvatarLarge').textContent = (currentUser.username || 'U')[0].toUpperCase();
+            
+            // 加载我的内容
+            await loadMyContents();
+        }
+
+        // 加载我的内容
+        async function loadMyContents() {
+            const loading = document.getElementById('myContentsLoading');
+            const grid = document.getElementById('myContentsGrid');
+            const empty = document.getElementById('myContentsEmpty');
+            
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch(API_CONFIG.GET_CONTENTS);
+                const data = await response.json();
+                
+                if (data.success && data.contents) {
+                    // 筛选当前用户的内容
+                    const myContents = data.contents.filter(c => c.UserId === currentUser.id);
+                    
+                    if (myContents.length > 0) {
+                        grid.innerHTML = myContents.map(content => createContentCard(content)).join('');
+                        document.getElementById('myContentsCount').textContent = myContents.length;
+                        
+                        // 计算总浏览量
+                        const totalViews = myContents.reduce((sum, c) => sum + (c.ViewCount || 0), 0);
+                        document.getElementById('myViewsCount').textContent = totalViews;
+                    } else {
+                        empty.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error('Load my contents error:', error);
+                showToast('Failed to load', 'error');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // 切换标签页
+        function switchTab(tabName) {
+            // 更新按钮状态
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 切换内容
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            
+            if (tabName === 'myContents') {
+                document.getElementById('myContentsTab').classList.add('active');
+            } else if (tabName === 'myLikes') {
+                document.getElementById('myLikesTab').classList.add('active');
+                loadMyLikesInProfile();
+            }
+        }
+
+        // 加载我的点赞（在个人中心页面）
+        async function loadMyLikesInProfile() {
+            const loading = document.getElementById('myLikesLoading');
+            const grid = document.getElementById('myLikesGrid');
+            const empty = document.getElementById('myLikesEmpty');
+            
+            // 如果已经加载过，直接返回
+            if (grid.children.length > 0) return;
+            
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch(`${API_CONFIG.GET_MY_LIKES}&userId=${currentUser.id}`);
+                const data = await response.json();
+                
+                if (data.success && data.contents && data.contents.length > 0) {
+                    grid.innerHTML = data.contents.map(content => createContentCard(content)).join('');
+                    document.getElementById('myLikesCount').textContent = data.contents.length;
+                } else {
+                    empty.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Load my likes error:', error);
+                showToast('Failed to load', 'error');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
+

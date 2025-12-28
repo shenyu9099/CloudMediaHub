@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Detail - CloudMediaHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <h1 class="logo" onclick="window.location.href='index.html'">☁️ CloudMediaHub</h1>
+            </div>
+            <div class="nav-center">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="discover.html" class="nav-link">Discover</a>
+                <a href="upload.html" class="nav-link">Upload</a>
+            </div>
+            <div class="nav-right">
+                <div id="userSection" style="display: none;">
+                    <div class="user-menu">
+                        <span class="user-avatar" id="userAvatar">U</span>
+                        <div class="user-dropdown">
+                            <span id="username">Username</span>
+                            <div class="dropdown-menu">
+                                <a href="likes.html">My Likes</a>
+                                <a href="#" onclick="logout()">Logout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="authSection">
+                    <button onclick="showLogin()" class="btn-outline">Login</button>
+                    <button onclick="showRegister()" class="btn-primary">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content Detail Section -->
+    <section class="detail-section">
+        <div class="detail-container">
+            <div class="detail-back">
+                <button onclick="history.back()" class="btn-back">← Back</button>
+            </div>
+            
+            <div id="detailContent" class="detail-content-wrapper">
+                <!-- Content will be loaded here -->
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editModal')">&times;</span>
+            <h2>Edit Content</h2>
+            <form onsubmit="submitEdit(event)">
+                <input type="hidden" id="editContentId" />
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="editTitle" required placeholder="Enter title" />
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="editDesc" rows="5" placeholder="Enter description (optional)"></textarea>
+                </div>
+                <button type="submit" class="btn-primary btn-block">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>Login</h2>
+            <form onsubmit="login(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required placeholder="Enter your email" />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required placeholder="Enter your password" />
+                </div>
+                <button type="submit" class="btn-primary btn-block">Login</button>
+            </form>
+            <p style="text-align: center; margin-top: 1rem;">
+                Don't have an account? <a href="#" onclick="closeModal('loginModal'); showRegister();">Sign up</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>Sign Up</h2>
+            <form onsubmit="register(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="regUsername" required placeholder="Enter your username" />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" required placeholder="Enter your email" />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" required placeholder="Enter your password" />
+                </div>
+                <button type="submit" class="btn-primary btn-block">Sign Up</button>
+            </form>
+            <p style="text-align: center; margin-top: 1rem;">
+                Already have an account? <a href="#" onclick="closeModal('registerModal'); showLogin();">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Get content ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const contentId = urlParams.get('id');
+
+        if (!contentId) {
+            window.location.href = 'discover.html';
+        }
+
+        // Load content detail on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check user login status
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                updateUserUI();
+            }
+
+            // Load content detail
+            await loadContentDetail(contentId);
+        });
+
+        async function loadContentDetail(contentId) {
+            try {
+                const response = await fetch(`${API_CONFIG.GET_CONTENT_BY_ID}&id=${contentId}`);
+                const data = await response.json();
+
+                if (data.success && data.content) {
+                    const content = data.content;
+                    
+                    console.log('Content loaded:', content);
+                    
+                    // Record view
+                    if (currentUser) {
+                        await recordInteraction(contentId, 'view');
+                    }
+
+                    // Get username
+                    const username = content.Username || 'Anonymous';
+                    
+                    // Check if current user is the owner
+                    const isOwner = currentUser && currentUser.id === content.UserId;
+                    
+                    // Owner action buttons
+                    const ownerActions = isOwner ? `
+                        <div class="detail-owner-actions">
+                            <button onclick="editContent('${content.ContentId}', '${content.Title.replace(/'/g, "\\'")}', '${(content.Description || '').replace(/'/g, "\\'")}', '${(content.Tags || '').replace(/'/g, "\\'")}')" class="btn-outline">✏️ Edit</button>
+                            <button onclick="deleteContentConfirm('${content.ContentId}')" class="btn-danger">🗑️ Delete</button>
+                        </div>
+                    ` : '';
+
+                    const mediaUrl = getMediaUrl(content.BlobUrl);
+                    const thumbnailUrl = content.ThumbnailUrl ? getMediaUrl(content.ThumbnailUrl) : mediaUrl;
+                    
+                    console.log('Media URL:', mediaUrl);
+                    console.log('Thumbnail URL:', thumbnailUrl);
+                    
+                    let mediaHtml = '';
+                    if (content.FileType === 'image') {
+                        mediaHtml = `<img src="${mediaUrl}" alt="${content.Title}" class="detail-media-image" />`;
+                    } else if (content.FileType === 'video') {
+                        mediaHtml = `
+                            <video controls class="detail-media-video" poster="${thumbnailUrl}">
+                                <source src="${mediaUrl}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        `;
+                    } else if (content.FileType === 'audio') {
+                        mediaHtml = `
+                            <div class="detail-audio-wrapper">
+                                <div class="detail-audio-cover">🎵</div>
+                                <audio controls class="detail-media-audio">
+                                    <source src="${mediaUrl}" type="audio/mpeg">
+                                    Your browser does not support the audio tag.
+                                </audio>
+                            </div>
+                        `;
+                    }
+
+                    const tags = content.Tags ? content.Tags.split(',').map(tag => 
+                        `<span class="detail-tag" onclick="window.location.href='discover.html?tag=${encodeURIComponent(tag.trim())}'">${tag.trim()}</span>`
+                    ).join('') : '';
+
+                    document.getElementById('detailContent').innerHTML = `
+                        <div class="detail-main">
+                            <div class="detail-media">
+                                ${mediaHtml}
+                            </div>
+                            <div class="detail-info">
+                                <div class="detail-header">
+                                    <h1 class="detail-title">${content.Title}</h1>
+                                    <span class="detail-type-badge">${getFileTypeText(content.FileType)}</span>
+                                </div>
+                                
+                                <div class="detail-meta">
+                                    <div class="detail-uploader">
+                                        <span class="uploader-avatar">${username[0].toUpperCase()}</span>
+                                        <div>
+                                            <div class="uploader-name">${username}</div>
+                                            <div class="detail-date">${new Date(content.CreatedAt).toLocaleDateString()}</div>
+                                        </div>
+                                    </div>
+                                    ${ownerActions}
+                                </div>
+
+                                ${content.Description ? `<p class="detail-description">${content.Description}</p>` : ''}
+                                
+                                ${tags ? `<div class="detail-tags">${tags}</div>` : ''}
+                                
+                                <div class="detail-actions">
+                                    <button onclick="likeContent('${content.ContentId}')" class="action-btn action-like">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                        </svg>
+                                        <span class="action-label">Like</span>
+                                        <span class="action-count">${content.LikeCount || 0}</span>
+                                    </button>
+                                    <button onclick="shareContent('${content.ContentId}')" class="action-btn action-share">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="18" cy="5" r="3"></circle>
+                                            <circle cx="6" cy="12" r="3"></circle>
+                                            <circle cx="18" cy="19" r="3"></circle>
+                                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                        </svg>
+                                        <span class="action-label">Share</span>
+                                        <span class="action-count">${content.ShareCount || 0}</span>
+                                    </button>
+                                    <div class="action-btn action-view">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                        <span class="action-label">Views</span>
+                                        <span class="action-count">${content.ViewCount || 0}</span>
+                                    </div>
+                                    <div class="action-btn action-comment">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                        </svg>
+                                        <span class="action-label">Comments</span>
+                                        <span class="action-count" id="commentCount">${content.CommentCount || 0}</span>
+                                    </div>
+                                </div>
+
+                                <div class="detail-comments-section">
+                                    <h3>Comments</h3>
+                                    <div id="commentsList" class="comments-list">
+                                        <!-- Comments will be loaded here -->
+                                    </div>
+                                    ${currentUser ? `
+                                        <div class="comment-form">
+                                            <textarea id="commentInput" placeholder="Write a comment..." rows="3"></textarea>
+                                            <button onclick="submitComment('${content.ContentId}')" class="btn-primary">Post Comment</button>
+                                        </div>
+                                    ` : `
+                                        <p class="comment-login-prompt">Please <a href="#" onclick="showLogin()">login</a> to comment.</p>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Load comments
+                    await loadComments(contentId);
+                } else {
+                    document.getElementById('detailContent').innerHTML = `
+                        <div class="error-message">
+                            <h2>Content not found</h2>
+                            <button onclick="window.location.href='discover.html'" class="btn-primary">Back to Discover</button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Load detail error:', error);
+                document.getElementById('detailContent').innerHTML = `
+                    <div class="error-message">
+                        <h2>Failed to load content</h2>
+                        <button onclick="window.location.href='discover.html'" class="btn-primary">Back to Discover</button>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
+

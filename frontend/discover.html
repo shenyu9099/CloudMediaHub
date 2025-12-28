@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discover - CloudMediaHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <h1 class="logo" onclick="window.location.href='index.html'">☁️ CloudMediaHub</h1>
+            </div>
+            <div class="nav-center">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="discover.html" class="nav-link active">Discover</a>
+                <a href="upload.html" class="nav-link">Upload</a>
+            </div>
+            <div class="nav-right">
+                <div class="search-box">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 17C13.4183 17 17 13.4183 17 9C17 4.58172 13.4183 1 9 1C4.58172 1 1 4.58172 1 9C1 13.4183 4.58172 17 9 17Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M19 19L14.65 14.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Search content or tags..." />
+                </div>
+                <div id="userSection" style="display: none;">
+                    <div class="user-menu">
+                        <span class="user-avatar" id="userAvatar">U</span>
+                        <div class="user-dropdown">
+                            <span id="username">Username</span>
+                            <div class="dropdown-menu">
+                                <a href="likes.html">My Likes</a>
+                                <a href="#" onclick="logout()">Logout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="authSection">
+                    <button onclick="showLogin()" class="btn-outline">Login</button>
+                    <button onclick="showRegister()" class="btn-primary">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3>CATEGORIES</h3>
+                <button class="category-btn active" onclick="filterByType('all')">
+                    📁 All Content
+                </button>
+                <button class="category-btn" onclick="filterByType('image')">
+                    🖼️ Images
+                </button>
+                <button class="category-btn" onclick="filterByType('video')">
+                    🎬 Videos
+                </button>
+                <button class="category-btn" onclick="filterByType('audio')">
+                    🎵 Audio
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>POPULAR TAGS</h3>
+                <div id="tagsList" class="tags-container">
+                    <!-- Dynamically loaded tags -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Content Display Area -->
+        <main class="content-area">
+            <div class="content-header">
+                <h2 id="contentTitle">All Content</h2>
+                <div class="sort-options">
+                    <button onclick="sortBy('time')" class="active">⏰ Latest</button>
+                    <button onclick="sortBy('like')">❤️ Popular</button>
+                </div>
+            </div>
+
+            <div id="contentGrid" class="content-grid">
+                <!-- Dynamically loaded content cards -->
+            </div>
+
+            <div id="loadingIndicator" class="loading" style="display: none;">
+                Loading
+            </div>
+        </main>
+    </div>
+
+    <!-- Content Detail Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content detail-modal">
+            <span class="close" onclick="closeModal('detailModal')">&times;</span>
+            <div id="detailContent">
+                <!-- Dynamically loaded content details -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Content Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editModal')">&times;</span>
+            <h2>Edit Content</h2>
+            <form onsubmit="submitEdit(event)">
+                <input type="hidden" id="editContentId" />
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="editTitle" required placeholder="Enter title" />
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="editDesc" rows="5" placeholder="Enter description (optional)"></textarea>
+                </div>
+                <button type="submit" class="btn-primary btn-block">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>Welcome Back</h2>
+            <form onsubmit="login(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required placeholder="Enter your email" />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required placeholder="Enter your password" />
+                </div>
+                <button type="submit" class="btn-primary btn-block">Login</button>
+            </form>
+            <p class="modal-footer">
+                Don't have an account? <a href="#" onclick="closeModal('loginModal'); showRegister();">Sign Up</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>Create Account</h2>
+            <form onsubmit="register(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="regUsername" required placeholder="Enter your username" />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" required placeholder="Enter your email" />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" required placeholder="Enter password (at least 6 characters)" minlength="6" />
+                </div>
+                <button type="submit" class="btn-primary btn-block">Sign Up</button>
+            </form>
+            <p class="modal-footer">
+                Already have an account? <a href="#" onclick="closeModal('registerModal'); showLogin();">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- My Likes Modal -->
+    <div id="myLikesModal" class="modal">
+        <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
+            <span class="close" onclick="closeModal('myLikesModal')">&times;</span>
+            <h2>❤️ My Likes</h2>
+            <div id="myLikesContent" class="content-grid" style="margin-top: 2rem;">
+                <!-- Dynamically loaded liked content -->
+            </div>
+            <div id="myLikesLoading" class="loading" style="display: none;">
+                Loading
+            </div>
+            <div id="myLikesEmpty" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">❤️</div>
+                <p class="empty-state-text">No likes yet</p>
+                <button onclick="closeModal('myLikesModal')" class="btn-primary" style="margin-top: 1rem;">Continue Exploring</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check login status
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                updateUserUI();
+            }
+            
+            // Load content
+            loadTags();
+            loadContents();
+        });
+    </script>
+</body>
+</html>

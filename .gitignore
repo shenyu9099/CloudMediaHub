@@ -1,15 +1,18 @@
-# Ignore everything except frontend and CI/CD config
-/*
-!frontend/
-!.github/
-!.gitignore
+# Ignore documentation with secrets
+AZURE_RESOURCES_SETUP.md
+COSMOS_DB_GUIDE.md
+DEPLOYMENT_CHECKLIST.md
+DESIGN_GUIDE.md
+FEATURES.md
+MY_LIKES_FEATURE.md
+COMMENTS_FEATURE.md
 
-# Ignore sensitive files
-*.md
+# Ignore backend files (Logic Apps contain connection strings)
 logic-apps/
+
+# Ignore SQL scripts
 sql/
 
-# Keep frontend files
-frontend/*
-.github/*
-
+# Keep frontend and CI/CD
+# frontend/ - will be pushed
+# .github/ - will be pushed

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Likes - CloudMediaHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <h1 class="logo" onclick="window.location.href='index.html'">☁️ CloudMediaHub</h1>
+            </div>
+            <div class="nav-center">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="discover.html" class="nav-link">Discover</a>
+                <a href="upload.html" class="nav-link">Upload</a>
+            </div>
+            <div class="nav-right">
+                <div id="userSection" style="display: none;">
+                    <div class="user-menu">
+                        <span class="user-avatar" id="userAvatar">U</span>
+                        <div class="user-dropdown">
+                            <span id="username">Username</span>
+                            <div class="dropdown-menu">
+                                 <a href="likes.html">  My Likes</a>
+                                <a href="#" onclick="logout()">  Logout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="authSection">
+                    <button onclick="showLogin()" class="btn-outline">Login</button>
+                    <button onclick="showRegister()" class="btn-primary">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- My Likes Section -->
+    <section class="likes-section">
+        <div class="container">
+            <div class="section-header">
+                <h1>❤️ My Likes</h1>
+                <p>Content you've liked</p>
+            </div>
+            
+            <div id="likesGrid" class="content-grid">
+                <!-- Content will be loaded here -->
+            </div>
+            
+            <div id="likesLoading" class="loading" style="display: none;">
+                Loading...
+            </div>
+            
+            <div id="likesEmpty" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">❤️</div>
+                <p class="empty-state-text">No liked content yet</p>
+                <button onclick="window.location.href='discover.html'" class="btn-primary" style="margin-top: 1rem;">Discover Content</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>Login</h2>
+            <form onsubmit="login(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required placeholder="Enter your email" />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required placeholder="Enter your password" />
+                </div>
+                <button type="submit" class="btn-primary btn-block">Login</button>
+            </form>
+            <p style="text-align: center; margin-top: 1rem;">
+                Don't have an account? <a href="#" onclick="closeModal('loginModal'); showRegister();">Sign up</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>Sign Up</h2>
+            <form onsubmit="register(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="regUsername" required placeholder="Enter your username" />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" required placeholder="Enter your email" />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" required placeholder="Enter your password" />
+                </div>
+                <button type="submit" class="btn-primary btn-block">Sign Up</button>
+            </form>
+            <p style="text-align: center; margin-top: 1rem;">
+                Already have an account? <a href="#" onclick="closeModal('registerModal'); showLogin();">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Page load initialization
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check login status
+            const savedUser = localStorage.getItem('currentUser');
+            if (!savedUser) {
+                // Not logged in, redirect to home
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = JSON.parse(savedUser);
+            updateUserUI();
+            
+            // Load liked content
+            await loadLikedContent();
+        });
+
+        async function loadLikedContent() {
+            const loading = document.getElementById('likesLoading');
+            const grid = document.getElementById('likesGrid');
+            const empty = document.getElementById('likesEmpty');
+            
+            loading.style.display = 'block';
+            grid.innerHTML = '';
+            empty.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_CONFIG.GET_MY_LIKES}&userId=${currentUser.id}`);
+                const data = await response.json();
+                
+                if (data.success && data.contents && data.contents.length > 0) {
+                    grid.innerHTML = data.contents.map(content => {
+                        const mediaUrl = getMediaUrl(content.BlobUrl);
+                        const thumbnailUrl = content.ThumbnailUrl ? getMediaUrl(content.ThumbnailUrl) : mediaUrl;
+                        const username = content.Username || 'Anonymous';
+                        
+                        return `
+                            <div class="content-card" onclick="showDetail('${content.ContentId}')">
+                                <div class="card-thumbnail">
+                                    ${content.FileType === 'image' ? 
+                                        `<img src="${thumbnailUrl}" alt="${content.Title}" />` :
+                                        content.FileType === 'video' ?
+                                        `<div class="video-thumbnail">
+                                            <img src="${thumbnailUrl}" alt="${content.Title}" />
+                                            <div class="play-icon">▶</div>
+                                        </div>` :
+                                        `<div class="audio-thumbnail">
+                                            <div class="audio-icon">🎵</div>
+                                        </div>`
+                                    }
+                                </div>
+                                <div class="card-content">
+                                    <h3 class="card-title">${content.Title}</h3>
+                                    <div class="card-type">
+                                        ${getTypeIcon(content.FileType)} ${getFileTypeText(content.FileType)}
+                                    </div>
+                                    <div class="card-uploader">
+                                        <span class="uploader-avatar">${username[0].toUpperCase()}</span>
+                                        <span class="uploader-name">${username}</span>
+                                    </div>
+                                    <div class="card-stats">
+                                        <span>❤️ ${content.LikeCount || 0}</span>
+                                        <span>👁️ ${content.ViewCount || 0}</span>
+                                        <span>💬 ${content.CommentCount || 0}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    empty.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Load likes error:', error);
+                showToast('Failed to load', 'error');
+                empty.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
+
