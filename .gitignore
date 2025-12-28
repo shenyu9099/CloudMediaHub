@@ -1,0 +1,15 @@
+# Ignore everything except frontend and CI/CD config
+/*
+!frontend/
+!.github/
+!.gitignore
+
+# Ignore sensitive files
+*.md
+logic-apps/
+sql/
+
+# Keep frontend files
+frontend/*
+.github/*
+
